@@ -1,1 +1,140 @@
-import Notiflix from 'notiflix';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { fetchImApi } from './fetchImages';
+import SimpleLightBox from 'simplelightbox';
+
+
+const refs = {
+    form: document.querySelector('#search-form'),
+    divGallery: document.querySelector('.gallery'),
+    guard: document.querySelector('.guard'),
+
+}
+
+const simplelightbox = new SimpleLightBox('.gallery a', { loop: false });
+
+let page = 1;
+let totalPage = 0;
+let searchQuery = '';
+const imagePerPage = 40;
+
+const options = {
+    root: null,
+    rootMargin: '2000px',
+    threshold: 1.0,
+};
+
+const observer = new IntersectionObserver(onload, options);
+
+refs.form.addEventListener('submit', onFormSubmit);
+
+function onFormSubmit(evt) {
+    evt.preventDefault();
+
+    searchQuery = evt.currentTarget.elements.searchQuery.value.trim();
+
+    resetPage();
+
+
+    if (!searchQuery) {
+        clearaGlleryList();
+        Notify.failure(
+            'Sorry, there are no images matching your search query. Please try again.'
+        );
+        return
+    }
+
+    fetchImApi(searchQuery, page)
+        .then(({ data }) => {
+            if (!data.totalHits) {
+                Notify.failure(
+                    'Sorry, there are no images matching your search query. Please try again.'
+                );
+                clearaGlleryList();
+                return
+            }
+            clearaGlleryList();
+            Notify.success(`Hooray! We found ${data.totalHits} images.`);
+            refs.divGallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+            observer.observe(refs.guard);
+            totalPage = Math.ceil(data.totalHits / imagePerPage);
+            if (page === totalPage) {
+                console.log(page);
+                Notify.info(
+                    `We're sorry, but you've reached the end of search results.`
+                );
+                observer.unobserve(refs.guard);
+                return;
+            }
+        })
+        .then(() => simplelightbox.refresh());
+}
+
+
+
+function createMarkup(arr) {
+    return arr
+        .map(
+            ({
+                webformatURL,
+                largeImageURL,
+                tags,
+                likes,
+                views,
+                comments,
+                downloads,
+            }) => `
+                <div class="photo-card">
+                    <div class="thumb"><a class="gallery-item" href="${largeImageURL}">
+                    <img src="${webformatURL}" alt="${tags}" loading="lazy" /></a></div>
+                    <div class="info">
+                    <p class="info-item"
+                    <b>Likes</b>${likes}
+                    </p>
+                    <p class="info-item">
+                    <b>Views</b>${views}
+                    </p>
+                    <p class="info-item">
+                    <b>Comments</b>${comments}
+                    </p>
+                    <p class="info-item">
+                    <b>Downloads</b>${downloads}
+                    </p>
+                    </div>    
+                </div>`
+        )
+        .join('');
+}
+
+function onload(entries, observer) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            page += 1;
+
+            fetchImApi(searchQuery, page)
+                .then(({ data }) => {
+                    refs.divGallery.insertAdjacentHTML(
+                        'beforeend',
+                        createMarkup(data.hits)
+                    );
+                    totalPage = Math.celi(data.totalHits / imagePerPage);
+                    if (page === totalPage) {
+                        console.log(page);
+                        Notify.info(
+                            `We're sorry, but you've reached the end of search results.`
+                        );
+                        observer.unobserve(refs.guard);
+
+                        return;
+                    }
+                })
+                .then(() => simplelightbox.refresh());
+        }
+    });
+}
+function clearaGlleryList() {
+    refs.divGallery.innerHTML = '';
+}
+
+function resetPage() {
+    page = 1
+}
