@@ -13,7 +13,7 @@ const refs = {
 const simplelightbox = new SimpleLightBox('.gallery a', { loop: false });
 
 let page = 1;
-let totalPage = 0;
+let totalPages = 0;
 let searchQuery = '';
 const imagePerPage = 40;
 
@@ -56,8 +56,8 @@ function onFormSubmit(evt) {
             Notify.success(`Hooray! We found ${data.totalHits} images.`);
             refs.divGallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
             observer.observe(refs.guard);
-            totalPage = Math.ceil(data.totalHits / imagePerPage);
-            if (page === totalPage) {
+            totalPages = Math.ceil(data.totalHits / imagePerPage);
+            if (page === totalPages) {
                 console.log(page);
                 Notify.info(
                     `We're sorry, but you've reached the end of search results.`
@@ -116,8 +116,8 @@ function onload(entries, observer) {
                         'beforeend',
                         createMarkup(data.hits)
                     );
-                    totalPage = Math.celi(data.totalHits / imagePerPage);
-                    if (page === totalPage) {
+                    totalPages = Math.celi(data.totalHits / imagePerPage);
+                    if (page === totalPages) {
                         console.log(page);
                         Notify.info(
                             `We're sorry, but you've reached the end of search results.`
