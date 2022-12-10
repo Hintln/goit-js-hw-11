@@ -116,7 +116,7 @@ function onload(entries, observer) {
                         'beforeend',
                         createMarkup(data.hits)
                     );
-                    totalPages = Math.celi(data.totalHits / imagePerPage);
+                    totalPages = Math.ceil(data.totalHits / imagePerPage);
                     if (page === totalPages) {
                         console.log(page);
                         Notify.info(
